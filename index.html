@@ -179,10 +179,6 @@ label.lbl2{display:block;font-weight:700;margin:14px 0 6px}
     <div class="drow" id="discRow"></div>
     <div class="dline num" id="discLine" hidden><span id="discName"></span><span id="discAmt"></span></div>
     <div class="total"><span class="lbl">合計</span><span class="amt num" id="total">¥0</span></div>
-    <div class="method" role="group" aria-label="支払方法">
-      <button id="mCash" aria-pressed="true">現金</button><button id="mPP" class="pp" aria-pressed="false">PayPay</button>
-    </div>
-    <div class="pp-note" id="ppNote" hidden>お客さんのPayPay画面で「支払い完了」を確認してから会計する</div>
     <div class="cashbox" id="cashBox">
     <div class="cash" id="cash"></div>
     <div class="recv"><label for="recvIn">金額を入力</label><span class="yen">¥</span><input id="recvIn" class="num" inputmode="numeric" autocomplete="off" placeholder="例：2000"></div>
@@ -203,8 +199,8 @@ label.lbl2{display:block;font-weight:700;margin:14px 0 6px}
 
 <!-- 書き出し -->
 <section id="tab-exp" hidden>
-  <h2>支払方法別の合計（答え合わせ用）</h2>
-  <p class="note">PayPayの行を、PayPay for Businessの取引履歴（同じ日）の件数・金額と照らし合わせる。現金の行は、レジの現金（釣り銭準備金を引いた額）と照らし合わせる。取消分は除外済み。</p>
+  <h2>日別の合計（現金の答え合わせ用）</h2>
+  <p class="note">レジの現金から釣り銭準備金を引いた額と照らし合わせる。取消分は除外済み。</p>
   <div class="tbl-wrap"><table id="methodTable"></table></div>
 
   <h2 style="margin-top:20px">売上記録シートに貼る</h2>
@@ -332,17 +328,9 @@ label.lbl2{display:block;font-weight:700;margin:14px 0 6px}
       const n=b.dataset.n; cart[n]=Math.max(0,(cart[n]||0)+Number(b.dataset.d)); if(!cart[n]) delete cart[n]; renderReg();
     }));
   }
+  // 支払方法は現金のみ（書き出しの「支払方法」列は常に「現金」になり、経費管理シートの形式はそのまま）
   let payMethod="現金";
-  function setMethod(m){ payMethod=m; if(m==="PayPay") received=null; renderReg(); }
-  document.getElementById("mCash").addEventListener("click",()=>setMethod("現金"));
-  document.getElementById("mPP").addEventListener("click",()=>setMethod("PayPay"));
   function renderCash(){
-    const pp=payMethod==="PayPay";
-    document.getElementById("mCash").setAttribute("aria-pressed",!pp);
-    document.getElementById("mPP").setAttribute("aria-pressed",pp);
-    document.getElementById("cashBox").hidden=pp;
-    document.getElementById("ppNote").hidden=!pp;
-    document.getElementById("payBtn").textContent=pp?"PayPayで会計する":"会計する";
     const total=cartTotal();
     const opts=[["ちょうど",total],["¥1,000",1000],["¥5,000",5000],["¥10,000",10000]];
     const el=document.getElementById("cash");

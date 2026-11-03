@@ -1,5 +1,5 @@
 // 更新したらこの番号を上げる（v1 → v2）
-const CACHE = "obanyaki-register-v1";
+const CACHE = "obanyaki-register-v2";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
 
 self.addEventListener("install", e => {
