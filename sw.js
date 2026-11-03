@@ -1,5 +1,5 @@
-// 更新したらこの番号を上げる（v3 → v4）
-const CACHE = "obanyaki-register-v3";
+// 更新したらこの番号を上げる（v4 → v5）
+const CACHE = "obanyaki-register-v4";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
 
 // インストール時はブラウザのキャッシュを使わず、必ずサーバーから最新を取る

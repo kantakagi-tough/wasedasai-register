@@ -100,8 +100,30 @@ section[hidden]{display:none}
 .recv{display:flex;align-items:center;gap:8px;margin-top:8px}
 .recv label{color:var(--muted);white-space:nowrap}
 .recv .yen{font-weight:900}
-.recv input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface);font-size:1.15rem;font-weight:700;text-align:right}
-.recv input.on{border-color:var(--ai);box-shadow:0 0 0 2px var(--ai)}
+.recv-disp{flex:1;min-width:0;min-height:50px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--surface);font-size:1.5rem;font-weight:900;text-align:right;line-height:32px;color:var(--muted)}
+.recv-disp.on{border-color:var(--ai);box-shadow:0 0 0 2px var(--ai);color:var(--ink)}
+.keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.keypad button{height:54px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:1.45rem;font-weight:900;color:var(--ink);touch-action:manipulation}
+.keypad button:active{background:var(--line)}
+.keypad .kfn{font-size:1.05rem;color:var(--muted)}
+.keypad .k0{grid-column:span 4}
+/* Galaxy Tab S10 Lite 横向き（約1408×880）向け：左にメニュー、右に会計 */
+@media (min-width:1000px) and (orientation:landscape){
+  header,nav{max-width:1360px}
+  header{padding:8px 20px 6px}
+  main{max-width:1360px;padding:12px 20px 16px}
+  .reg-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;align-items:start}
+  .discs{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}
+  .disc{max-width:230px;max-height:230px}
+  .disc .n{font-size:1.25rem}
+  .disc .p{font-size:1.05rem}
+  .drow button{padding:12px 18px;font-size:1.05rem}
+  .reg-right{padding:14px 16px}
+  .cart-box{max-height:150px;overflow-y:auto}
+  .total{margin:8px 2px 8px}
+  .cash button{padding:10px 0}
+  #tab-hist,#tab-exp,#tab-set{max-width:860px;margin:0 auto}
+}
 .change{display:flex;justify-content:space-between;align-items:baseline;margin:10px 2px 0;min-height:2rem}
 .method{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;margin-bottom:10px;background:var(--paper)}
 .method button{border:0;border-radius:9px;padding:12px 0;font-weight:900;background:none;color:var(--muted)}
@@ -173,15 +195,24 @@ label.lbl2{display:block;font-weight:700;margin:14px 0 6px}
 <main>
 <!-- レジ -->
 <section id="tab-reg">
-  <div class="discs" id="discs"></div>
-  <div class="panel">
-    <div id="cart"></div>
+ <div class="reg-grid">
+  <div class="reg-left">
+    <div class="discs" id="discs"></div>
     <div class="drow" id="discRow"></div>
+  </div>
+  <div class="panel reg-right">
+    <div id="cart" class="cart-box"></div>
     <div class="dline num" id="discLine" hidden><span id="discName"></span><span id="discAmt"></span></div>
     <div class="total"><span class="lbl">合計</span><span class="amt num" id="total">¥0</span></div>
     <div class="cashbox" id="cashBox">
     <div class="cash" id="cash"></div>
-    <div class="recv"><label for="recvIn">金額を入力</label><span class="yen">¥</span><input id="recvIn" class="num" inputmode="numeric" autocomplete="off" placeholder="例：2000"></div>
+    <div class="recv"><span class="lbl" style="color:var(--muted);white-space:nowrap">お預かり</span><span class="yen">¥</span><div id="recvIn" class="recv-disp num" aria-live="polite">テンキーで入力</div></div>
+    <div class="keypad" id="keypad">
+      <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="c" class="kfn">クリア</button>
+      <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="bs" class="kfn" aria-label="1文字消す">⌫</button>
+      <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="00">00</button>
+      <button data-k="0" class="k0">0</button>
+    </div>
     <div class="change"><span class="lbl" id="changeLbl">お預かりを選ぶとお釣りを表示</span><span class="amt num" id="change"></span></div>
     </div>
     <div class="actions">
@@ -189,6 +220,7 @@ label.lbl2{display:block;font-weight:700;margin:14px 0 6px}
       <button class="btn btn-primary" id="payBtn" disabled>会計する</button>
     </div>
   </div>
+ </div>
 </section>
 
 <!-- 履歴 -->
@@ -341,7 +373,8 @@ label.lbl2{display:block;font-weight:700;margin:14px 0 6px}
       renderReg();
     }));
     const rin=document.getElementById("recvIn");
-    if(!received||received.i!==-1) rin.value="";
+    if(!received||received.i!==-1) recvBuf="";
+    rin.textContent=recvBuf?Number(recvBuf).toLocaleString("ja-JP"):"テンキーで入力";
     rin.classList.toggle("on",!!received&&received.i===-1);
     const lbl=document.getElementById("changeLbl"), amt=document.getElementById("change");
     amt.className="amt num";
@@ -362,10 +395,15 @@ label.lbl2{display:block;font-weight:700;margin:14px 0 6px}
     renderCash(); renderHeader();
     document.getElementById("payBtn").disabled=!Object.keys(cart).length;
   }
-  document.getElementById("recvIn").addEventListener("input",e=>{
-    const digits=e.target.value.replace(/[^\d０-９]/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
-    if(e.target.value!==digits) e.target.value=digits;
-    received=digits?{i:-1,v:Number(digits)}:null;
+  let recvBuf="";
+  document.getElementById("keypad").addEventListener("click",e=>{
+    const b=e.target.closest("button[data-k]"); if(!b) return;
+    const k=b.dataset.k;
+    if(received&&received.i!==-1) recvBuf="";
+    if(k==="c") recvBuf="";
+    else if(k==="bs") recvBuf=recvBuf.slice(0,-1);
+    else if(recvBuf.length<6) recvBuf=(recvBuf+k).replace(/^0+/,"").slice(0,6);
+    received=recvBuf?{i:-1,v:Number(recvBuf)}:null;
     renderCash();
   });
   document.getElementById("clearBtn").addEventListener("click",()=>{cart={};received=null;payMethod="現金";discSel.clear();renderReg()});
